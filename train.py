@@ -1,7 +1,6 @@
 import os
 import argparse
 import logging
-from tabnanny import verbose
 # Teminal arguments
 parser = argparse.ArgumentParser(description='Convert dataset to tfrecord')
 parser.add_argument('-cfg','--config',type=str,help='path to config file',default='./configs/config.py')

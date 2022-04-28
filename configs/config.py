@@ -14,7 +14,7 @@ checkpoints_dir = './checkpoints'
 old_checkpoints_path = None
 class_info_path = None
 batch_size=64
-epochs = 10
+epochs = 20
 
 
 
