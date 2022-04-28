@@ -1,6 +1,7 @@
 import os
 import argparse
 import logging
+from tabnanny import verbose
 # Teminal arguments
 parser = argparse.ArgumentParser(description='Convert dataset to tfrecord')
 parser.add_argument('-cfg','--config',type=str,help='path to config file',default='./configs/config.py')
@@ -56,7 +57,8 @@ def main(args):
         monitor="loss",
         mode='min',
         save_best_only=True,
-        save_weights_only=False
+        save_weights_only=False,
+        verbose=1
     )
     # model logs checkpoint
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs_path)
@@ -95,6 +97,7 @@ def main(args):
     model.trainable = True # Unfreeze all layers
     model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
     model.fit(train_dataset, epochs=int(config.epochs*3/4), validation_data=val_dataset, callbacks=callbacks_list)
+    model.save(checkpoint_path +'/{}_all_epochs.h5'.format(config.backbone))
 
 if __name__ == '__main__':
     main(args)
