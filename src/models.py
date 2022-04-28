@@ -48,14 +48,14 @@ def build_classification_model(num_classes,input_shape=(224,224,3),backbone="mob
 
 def add_other_class(model):
     # get the dropout layer from the above model
-    branch_other = model.get_layer('dropout_layer')\
+    branch_other = model.get_layer('dropout_layer').output
     # add prediction other or class layer
     branch_other_prediction = layers.Dense(1,name='other_prediction_logit_layer')(branch_other)
     # other probability layer
     branch_other_probs = layers.Activation('sigmoid',name='other_probs_layer')(branch_other_prediction)
     
     # get classes layer from the above model
-    branch_classes = model.get_layer('prediction_logits_layer')
+    branch_classes = model.get_layer('prediction_logits_layer').output
     # add other probability to classes layer
     branch_classes_prediction = layers.Multiply()([branch_classes,branch_other_probs])
     # add sigmod activation layer
