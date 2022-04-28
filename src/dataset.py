@@ -124,6 +124,7 @@ class Dataset(tf.keras.utils.Sequence):
         # Build image path for each class
         for cls in tqdm.tqdm(self.classes):
             images_path = glob.glob(os.path.join(dataset_dir, cls, '*'))
+            assert len(images_path) > 0, "No images found in {}".format(cls)
             for img_path in images_path:
                 self.samples.append({
                         'image_path': img_path,
