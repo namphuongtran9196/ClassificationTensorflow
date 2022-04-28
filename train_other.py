@@ -50,36 +50,24 @@ def main(args):
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs_path)
     # callbacks for training model
     callbacks_list = [model_cptk,tensorboard_callback]
-    # loss function
-    loss_fn = tf.keras.losses.CategoricalCrossentropy(),
-    # optimizer
-    optimizer = tf.keras.optimizers.Adam(learning_rate=config.learning_rate)
-    # metric 
-    metrics = []
-    metrics.add(tf.keras.metrics.CategoricalAccuracy())
-    metrics.add(tf.keras.metrics.Precision())
-    metrics.add(tf.keras.metrics.Recall())
-    metrics.add(tf.keras.metrics.AUC())
-    
     # init model
-    model = build_classification_model(train_dataset.num_classes(),input_shape=config.input_shape,
-                                       backbone=config.backbone,dropout=config.dropout,
-                                       preprocessing=config.preprocessing)
+    model = build_classification_model(train_dataset.num_classes(),input_shape=(224,224,3),
+                                       backbone=config.backbone,dropout=0.2,preprocessing=True)
     if config.old_checkpoints_path is not None:
         model.load_weights(config.old_checkpoints_path)
         logging.info("Restore model from {}".format(config.old_checkpoints_path))
     else:
         logging.info("Training from scratch")
     # compile model 
-    model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
+    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
+                  optimizer=tf.optimizers.Adam(config.learning_rate))   
     # Transfer learning with high lerning rate
-    logging.info("Transfer learning with high lerning rate for first {} epochs".format(int(config.epochs/4)))
-    model.fit(train_dataset, epochs=int(config.epochs/4), validation_data=val_dataset, callbacks=callbacks_list)
+    model.fit(train_dataset, epochs=5, validation_data=val_dataset, callbacks=callbacks_list)
     # Transfer learning with low lerning rate
-    logging.info("Unfreeze layers and train for the rest of the epochs")
-    model.trainable = True # Unfreeze all layers
-    model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
-    model.fit(train_dataset, epochs=int(config.epochs*3/4), validation_data=val_dataset, callbacks=callbacks_list)
+    model.trainable = True
+    model.compile(loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
+                  optimizer=tf.optimizers.Adam(1e-5))
+    model.fit(train_dataset, epochs=5, validation_data=val_dataset, callbacks=callbacks_list)
 
 if __name__ == '__main__':
     main(args)
