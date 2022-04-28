@@ -14,23 +14,23 @@ def build_classification_model(num_classes,input_shape=(224,224,3),backbone="mob
     inputs = layers.Input(shape=input_shape)
     # pass image through backbone, freeze backbone layers
     if backbone.lower() == "resnet50":
-        base_model = ResNet50(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model = ResNet50(input_shape=input_shape,weights='imagenet', include_top=False)
         base_model.trainable = False
         x = preprocess_input_resnet50(inputs) if preprocessing else inputs
     elif backbone.lower() == "resnet50v2":
-        base_model = ResNet50V2(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model = ResNet50V2(input_shape=input_shape,weights='imagenet', include_top=False)
         base_model.trainable = False
         x = preprocess_input_resnet50v2(inputs) if preprocessing else inputs
     elif backbone.lower() == "mobilenetv2":
-        base_model = MobileNetV2(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model = MobileNetV2(input_shape=input_shape,weights='imagenet', include_top=False)
         base_model.trainable = False
         x = preprocess_input_mobilenetv2(inputs) if preprocessing else inputs
     elif backbone.lower() == "mobilenetv3small":
-        base_model = MobileNetV3Small(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model = MobileNetV3Small(input_shape=input_shape,weights='imagenet', include_top=False)
         base_model.trainable = False
         x = preprocess_input_mobilenetv3(inputs) if preprocessing else inputs
     elif backbone.lower() == "mobilenetv3large":
-        base_model = MobileNetV3Large(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model = MobileNetV3Large(input_shape=input_shape,weights='imagenet', include_top=False)
         base_model.trainable = False
         x = preprocess_input_mobilenetv3(inputs) if preprocessing else inputs
     else:
