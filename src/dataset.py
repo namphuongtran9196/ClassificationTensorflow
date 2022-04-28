@@ -10,13 +10,15 @@ from src.utils import pad_square_and_resize
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None, data_augmentation=None,one_hot=True,shuffle=True):
+def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None,classes_map_to_id=None, 
+                 data_augmentation=None,one_hot=True,shuffle=True):
     """load dataset"""
     logging.info("Load dataset from {}".format(dataset_dir))
     dataset = Dataset(batch_size=batch_size,
                            dataset_dir=dataset_dir,
                            target_size =target_size,
                            classes = classes,
+                           classes_map_to_id=classes_map_to_id,
                            data_augmentation=data_augmentation,
                            one_hot=one_hot,
                            shuffle=shuffle)
@@ -45,6 +47,7 @@ class Dataset(tf.keras.utils.Sequence):
                  batch_size,
                  target_size,
                  classes = None,
+                 classes_map_to_id=None,
                  data_augmentation=None,
                  one_hot = False,
                  shuffle= True):
@@ -71,6 +74,7 @@ class Dataset(tf.keras.utils.Sequence):
             batch_size (int): the number of samples in a batch  
             target_size (tuple): the size of the image after padding and resizing. For example (224,224)
             classes (list): list of classes in the dataset. For example ['person','car','dog']
+            classes_map_to_id (dict): map classes to integers. For example {'person':0,'car':1,'dog':2}
             data_augmentation (object or function, optional): An object or function that takes a numpy array of 
                                                             shape (H, W, C) and augments it.
             one_hot (bool, optional): While creating the dataset, if one_hot is True, the label will be 
@@ -81,6 +85,7 @@ class Dataset(tf.keras.utils.Sequence):
         self.batch_size = batch_size
         self.samples=[]
         self.classes = classes
+        self.classes_map_to_id = classes_map_to_id
         self.build(dataset_dir)
         self.indexes = np.arange(len(self.samples))
         self.shuffle = shuffle
@@ -112,8 +117,10 @@ class Dataset(tf.keras.utils.Sequence):
         # Create classes name if not given
         if self.classes is None:
             self.classes = os.listdir(dataset_dir)
-        # Map classes to integers
-        self.classes_map_to_id = {self.classes[i]: i for i in range(len(self.classes))}
+            self.classes.sort()
+        # Create map classes to integers if not given
+        if self.classes_map_to_id is None:
+            self.classes_map_to_id = {self.classes[i]: i for i in range(len(self.classes))}
         # Build image path for each class
         for cls in tqdm.tqdm(self.classes):
             images_path = glob.glob(os.path.join(dataset_dir, cls, '*'))
@@ -147,7 +154,7 @@ class Dataset(tf.keras.utils.Sequence):
                 label = [name == sample['label'] for name in self.classes]
             else:
                 # create integer encoding
-                label = self.classes_map_to_id[sample['label']]
+                label = self.classes_map_to_id.get(sample['label'],-1)
             # append to batch
             batch_images.append(image)
             batch_labels.append(label)

@@ -19,7 +19,7 @@ import importlib.util
 
 from src.models import build_classification_model
 from src.dataset import load_dataset, data_augmentation
-from src.utils import save_class_info
+from src.utils import save_class_info,load_class_info
 from datetime import datetime
 
 def main(args):
@@ -28,11 +28,20 @@ def main(args):
     spec = importlib.util.spec_from_file_location("config", args.config)
     config = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(config)
+    # load class info
+    classes= None
+    classes_map_to_id = None
+    if config.class_info_path is not None:
+        classes_info = load_class_info(config.class_info_path)
+        classes = classes_info["classes"]
+        classes_map_to_id = classes_info["classes_map_to_id"]
     # build dataset
-    train_dataset = load_dataset(config.train_dataset, batch_size=128,target_size=config.input_shape[:2],
+    train_dataset = load_dataset(config.train_dataset, batch_size=config.batch_size,target_size=config.input_shape[:2],
+                                 classes=classes,classes_map_to_id=classes_map_to_id,
                                  data_augmentation=data_augmentation(0.5),one_hot=True, shuffle=True)
-    val_dataset = load_dataset(config.val_dataset, batch_size=128,target_size=config.input_shape[:2],
-                               classes=train_dataset.classes,one_hot=True, shuffle=True)
+    val_dataset = load_dataset(config.val_dataset, batch_size=config.batch_size,target_size=config.input_shape[:2],
+                               classes=train_dataset.classes,classes_map_to_id=train_dataset.classes_map_to_id
+                               ,one_hot=True, shuffle=True)
     # define checkpoint save time and path
     checkpoint_dir = "./checkpoints/{}".format(config.backbone)
     save_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -45,6 +54,7 @@ def main(args):
     model_cptk = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path +'/{}.h5'.format(config.backbone),
         monitor="loss",
+        mode='min',
         save_best_only=True,
         save_weights_only=False
     )

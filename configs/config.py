@@ -12,7 +12,9 @@ learning_rate = 1e-2
 # Training config
 checkpoints_dir = './checkpoints'
 old_checkpoints_path = None
-epochs = 20
+class_info_path = None
+batch_size=64
+epochs = 10
 
 
 

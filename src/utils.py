@@ -43,7 +43,7 @@ def load_class_info(class_info_path):
 def save_class_info(classes, classes_map_to_id, save_path="class_info.json"):
     # Write the classes sequence to a file
     json_classes = {}
-    json_classes.update(classes_map_to_id)
+    json_classes.update({"classes_map_to_id":classes_map_to_id})
     json_classes.update({"classes": classes})
     json_object = json.dumps(json_classes, indent = 4) # Serializing json 
     with open(save_path, 'w') as f:
