@@ -61,7 +61,7 @@ def main(args):
     # model save checkpoint
     model_cptk = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path +'/{}_other.h5'.format(pretrained_model.name),
-        monitor="loss",
+        monitor="val_loss",
         mode='min',
         save_best_only=True,
         save_weights_only=False,
