@@ -3,7 +3,7 @@ import argparse
 import logging
 # Teminal arguments
 parser = argparse.ArgumentParser(description='Convert dataset to tfrecord')
-parser.add_argument('-cfg','--config',type=str,help='path to config file',default='./configs/config_coco.py')
+parser.add_argument('-cfg','--config',type=str,help='path to config file',default='./configs/config.py')
 parser.add_argument('--gpu', type=int,help='GPU ID, default is 0, -1 for using CPU', default=0)
 args = parser.parse_args()
 
