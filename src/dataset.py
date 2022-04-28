@@ -9,7 +9,7 @@ from src.utils import pad_square_and_resize
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None, data_augmentation=None,shuffle=True):
+def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None, data_augmentation=None,one_hot=True,shuffle=True):
     """load dataset"""
     logging.info("Load dataset from {}".format(dataset_dir))
     dataset = Dataset(batch_size=batch_size,
@@ -17,6 +17,7 @@ def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None, data
                            target_size =target_size,
                            classes = classes,
                            data_augmentation=data_augmentation,
+                           one_hot=one_hot,
                            shuffle=shuffle)
     return dataset
 
@@ -85,7 +86,7 @@ class Dataset(tf.keras.utils.Sequence):
         self.target_size = target_size
         self.data_augmentation = data_augmentation
         self.one_hot = one_hot
-        
+        self.on_epoch_end()
     def __len__(self):
         """Return the number of batches per epoch"""
         return int(np.floor(len(self.samples) / self.batch_size))
@@ -118,7 +119,7 @@ class Dataset(tf.keras.utils.Sequence):
                 f.write("\n{} {}".format(i, c))
         # Build image path for each class
         for cls in tqdm.tqdm(self.classes):
-            images_path = glob.glob(os.path.join(dataset_dir, 'images', '*'))
+            images_path = glob.glob(os.path.join(dataset_dir, cls, '*'))
             for img_path in images_path:
                 self.samples.append({
                         'image_path': img_path,
@@ -146,18 +147,16 @@ class Dataset(tf.keras.utils.Sequence):
             # load class labels
             if self.one_hot:
                 # create one-hot encoding
-                label = self.classes == sample['label']
-                # convert bool type to float
-                label = label * 1.0
+                label = [name == sample['label'] for name in self.classes]
             else:
                 # create integer encoding
-                label = self.classes_map_to_id(sample['label'])
+                label = self.classes_map_to_id[sample['label']]
             # append to batch
             batch_images.append(image)
             batch_labels.append(label)
         # convert to tensor
         batch_images = tf.convert_to_tensor(batch_images,dtype=tf.float32)
-        batch_labels = tf.convert_to_tensor(batch_labels,dtype=tf.int32)
+        batch_labels = tf.convert_to_tensor(batch_labels,dtype=tf.float32)
         return batch_images, batch_labels
     
     def load_image(self, path):
