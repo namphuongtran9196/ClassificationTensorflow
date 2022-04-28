@@ -5,18 +5,18 @@ import logging
 import skimage.io
 import numpy as np
 import tensorflow as tf
-from utils import pad_square_and_resize
+from src.utils import pad_square_and_resize
 
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
-def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None, data_augmentaion=None,shuffle=True):
+def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None, data_augmentation=None,shuffle=True):
     """load dataset"""
     logging.info("Load dataset from {}".format(dataset_dir))
     dataset = Dataset(batch_size=batch_size,
                            dataset_dir=dataset_dir,
                            target_size =target_size,
                            classes = classes,
-                           data_augmentaion=data_augmentaion,
+                           data_augmentation=data_augmentation,
                            shuffle=shuffle)
     return dataset
 
