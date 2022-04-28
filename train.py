@@ -68,7 +68,7 @@ def main(args):
     save_class_info(train_dataset.classes, train_dataset.classes_map_to_id, 
                     save_path=os.path.join(checkpoint_path,"class_info.json"))
     # loss function
-    loss_fn = tf.keras.losses.CategoricalCrossentropy(),
+    loss_fn = tf.keras.losses.CategoricalCrossentropy()
     # optimizer
     optimizer = tf.keras.optimizers.Adam(learning_rate=config.learning_rate)
     # metric 
