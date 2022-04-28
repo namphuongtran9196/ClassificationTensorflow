@@ -4,8 +4,8 @@ preprocessing = True
 input_shape = (224, 224, 3)
 dropout = 0.2
 # Dataset config
-train_dataset = './dataset/train'
-val_dataset = './dataset/val'
+train_dataset = './data/dataset/train'
+val_dataset = './data/dataset/val'
 # Optimizer config
 learning_rate = 1e-2
 

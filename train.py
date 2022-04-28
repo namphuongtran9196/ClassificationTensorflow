@@ -11,17 +11,19 @@ args = parser.parse_args()
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 # Set using GPU
 os.environ['CUDA_VISIBLE_DEVICES'] = str(args.gpu)
+# set logging config
+logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
 
 import tensorflow as tf
 import importlib.util
 
 from src.models import build_classification_model
 from src.dataset import load_dataset, data_augmentation
+from src.utils import save_class_info
 from datetime import datetime
 
 def main(args):
-    # set logging config
-    logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+    
     # load config
     spec = importlib.util.spec_from_file_location("config", args.config)
     config = importlib.util.module_from_spec(spec)
@@ -50,6 +52,9 @@ def main(args):
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs_path)
     # callbacks for training model
     callbacks_list = [model_cptk,tensorboard_callback]
+    # saving class info for inference phase
+    save_class_info(train_dataset.classes, train_dataset.classes_map_to_id, 
+                    save_path=os.path.join(checkpoint_path,"class_info.json"))
     # loss function
     loss_fn = tf.keras.losses.CategoricalCrossentropy(),
     # optimizer

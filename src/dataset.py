@@ -1,6 +1,7 @@
 import os
 import glob
 import tqdm
+import json
 import logging
 import skimage.io
 import numpy as np
@@ -113,10 +114,6 @@ class Dataset(tf.keras.utils.Sequence):
             self.classes = os.listdir(dataset_dir)
         # Map classes to integers
         self.classes_map_to_id = {self.classes[i]: i for i in range(len(self.classes))}
-        # Write the classes sequence to a file
-        with open('classes_info.txt', 'w') as f:
-            for i, c in self.classes_map_to_id.items():
-                f.write("\n{} {}".format(i, c))
         # Build image path for each class
         for cls in tqdm.tqdm(self.classes):
             images_path = glob.glob(os.path.join(dataset_dir, cls, '*'))
