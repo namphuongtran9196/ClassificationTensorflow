@@ -59,10 +59,18 @@ def main(args):
     os.makedirs(checkpoint_path,exist_ok=True)
     os.makedirs(logs_path,exist_ok=True)
     # model save checkpoint
-    model_cptk = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path +'/{}_other.h5'.format(pretrained_model.name),
+    model_cptk_loss = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path +'/{}_loss.h5'.format(config.backbone),
         monitor="val_loss",
         mode='min',
+        save_best_only=True,
+        save_weights_only=False,
+        verbose=1
+    )
+    model_cptk_acc = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path +'/{}_acc.h5'.format(config.backbone),
+        monitor="val_categorical_accuracy",
+        mode='max',
         save_best_only=True,
         save_weights_only=False,
         verbose=1
@@ -70,7 +78,7 @@ def main(args):
     # model logs checkpoint
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs_path)
     # callbacks for training model
-    callbacks_list = [model_cptk,tensorboard_callback]
+    callbacks_list = [model_cptk_loss,model_cptk_acc,tensorboard_callback]
     # loss function
     loss_classes_fn = tf.keras.losses.BinaryCrossentropy(from_logits=False)
     loss_other_fn = other_loss()
