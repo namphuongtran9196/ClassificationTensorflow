@@ -6,6 +6,9 @@ from tensorflow.keras.applications.resnet50 import ResNet50, preprocess_input as
 from tensorflow.keras.applications.resnet_v2 import ResNet50V2, preprocess_input as preprocess_input_resnet50v2
 from tensorflow.keras.applications.mobilenet_v2 import MobileNetV2, preprocess_input as preprocess_input_mobilenetv2
 
+from tensorflow.keras.applications import MobileNetV3Small, MobileNetV3Large
+from tensorflow.keras.applications.mobilenet_v3 import preprocess_input as preprocess_input_mobilenetv3
+
 def build_classification_model(num_classes,input_shape=(224,224,3),backbone="mobilenetv2",dropout=0.2,preprocessing=True):
     # input image with input_shape
     inputs = layers.Input(shape=input_shape)
@@ -22,6 +25,14 @@ def build_classification_model(num_classes,input_shape=(224,224,3),backbone="mob
         base_model = MobileNetV2(weights='imagenet', include_top=False, input_tensor=inputs)
         base_model.trainable = False
         x = preprocess_input_mobilenetv2(inputs) if preprocessing else inputs
+    elif backbone.lower() == "mobilenetv3small":
+        base_model = MobileNetV3Small(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model.trainable = False
+        x = preprocess_input_mobilenetv3(inputs) if preprocessing else inputs
+    elif backbone.lower() == "mobilenetv3large":
+        base_model = MobileNetV3Large(weights='imagenet', include_top=False, input_tensor=inputs)
+        base_model.trainable = False
+        x = preprocess_input_mobilenetv3(inputs) if preprocessing else inputs
     else:
         raise ValueError("Backbone {} is not supported".format(backbone))
     x = base_model(x)
