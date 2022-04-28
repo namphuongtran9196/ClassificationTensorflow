@@ -28,9 +28,9 @@ def main(args):
     spec.loader.exec_module(config)
     # build dataset
     train_dataset = load_dataset(config.train_dataset, batch_size=128,target_size=config.input_shape[:2],
-                                 data_augmentation=data_augmentation(0.5), shuffle=True)
+                                 data_augmentation=data_augmentation(0.5),one_hot=True, shuffle=True)
     val_dataset = load_dataset(config.val_dataset, batch_size=128,target_size=config.input_shape[:2],
-                               classes=train_dataset.classes, shuffle=True)
+                               classes=train_dataset.classes,one_hot=True, shuffle=True)
     # define checkpoint save time and path
     checkpoint_dir = "./checkpoints/{}".format(config.backbone)
     save_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -56,10 +56,10 @@ def main(args):
     optimizer = tf.keras.optimizers.Adam(learning_rate=config.learning_rate)
     # metric 
     metrics = []
-    metrics.add(tf.keras.metrics.CategoricalAccuracy())
-    metrics.add(tf.keras.metrics.Precision())
-    metrics.add(tf.keras.metrics.Recall())
-    metrics.add(tf.keras.metrics.AUC())
+    metrics.append(tf.keras.metrics.CategoricalAccuracy())
+    metrics.append(tf.keras.metrics.Precision())
+    metrics.append(tf.keras.metrics.Recall())
+    metrics.append(tf.keras.metrics.AUC())
     
     # init model
     model = build_classification_model(train_dataset.num_classes(),input_shape=config.input_shape,
