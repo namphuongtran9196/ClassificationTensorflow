@@ -42,6 +42,16 @@ def main(args):
     val_dataset = load_dataset(config.val_dataset, batch_size=config.batch_size,target_size=config.input_shape[:2],
                                classes=train_dataset.classes,classes_map_to_id=train_dataset.classes_map_to_id
                                ,one_hot=True, shuffle=True)
+    # init model
+    model = build_classification_model(train_dataset.num_classes(),input_shape=config.input_shape,
+                                       backbone=config.backbone,dropout=config.dropout,
+                                       preprocessing=config.preprocessing)
+    if config.old_checkpoints_path is not None:
+        model.load_weights(config.old_checkpoints_path)
+        logging.info("Restore model from {}".format(config.old_checkpoints_path))
+    else:
+        logging.info("Training from scratch")
+    
     # define checkpoint save time and path
     checkpoint_dir = os.path.join(config.checkpoints_dir,config.backbone)
     save_time = datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -50,6 +60,11 @@ def main(args):
     logs_path = os.path.join(checkpoint_dir, save_time,'logs')
     os.makedirs(checkpoint_path,exist_ok=True)
     os.makedirs(logs_path,exist_ok=True)
+    # saving class info for inference phase
+    save_class_info(train_dataset.classes, train_dataset.classes_map_to_id, 
+                    save_path=os.path.join(checkpoint_path,"class_info.json"))
+    
+    ########################### Transfer learning with high lerning rate ###########################
     # model save checkpoint
     model_cptk_loss = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path +'/{}_loss.h5'.format(config.backbone),
@@ -71,9 +86,6 @@ def main(args):
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs_path)
     # callbacks for training model
     callbacks_list = [model_cptk_loss,model_cptk_acc,tensorboard_callback]
-    # saving class info for inference phase
-    save_class_info(train_dataset.classes, train_dataset.classes_map_to_id, 
-                    save_path=os.path.join(checkpoint_path,"class_info.json"))
     # loss function
     loss_fn = tf.keras.losses.CategoricalCrossentropy()
     # optimizer
@@ -85,35 +97,13 @@ def main(args):
     metrics.append(tf.keras.metrics.Recall())
     metrics.append(tf.keras.metrics.AUC())
     
-    # init model
-    model = build_classification_model(train_dataset.num_classes(),input_shape=config.input_shape,
-                                       backbone=config.backbone,dropout=config.dropout,
-                                       preprocessing=config.preprocessing)
-    if config.old_checkpoints_path is not None:
-        model.load_weights(config.old_checkpoints_path)
-        logging.info("Restore model from {}".format(config.old_checkpoints_path))
-    else:
-        logging.info("Training from scratch")
-    # compile model 
+    # training model
     model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
-    # Transfer learning with high lerning rate
     logging.info("Transfer learning with high lerning rate for first {} epochs".format(int(config.epochs/4)))
     model.fit(train_dataset, epochs=int(config.epochs/4), validation_data=val_dataset, callbacks=callbacks_list)
     
-    # Transfer learning with low lerning rate
+    ########################### Transfer learning with low lerning rate ###########################
     logging.info("Unfreeze layers and train for the rest of the epochs")
-    model.trainable = True # Unfreeze all layers
-    # loss function
-    loss_fn = tf.keras.losses.CategoricalCrossentropy()
-    # optimizer
-    optimizer = tf.keras.optimizers.SGD(learning_rate=1e-6,momentum=0.9)
-    # metric 
-    metrics = []
-    metrics.append(tf.keras.metrics.CategoricalAccuracy())
-    metrics.append(tf.keras.metrics.Precision())
-    metrics.append(tf.keras.metrics.Recall())
-    metrics.append(tf.keras.metrics.AUC())
-    
     # model save checkpoint
     model_cptk_loss = tf.keras.callbacks.ModelCheckpoint(
         filepath=checkpoint_path +'/{}_unfreeze_loss.h5'.format(config.backbone),
@@ -131,11 +121,27 @@ def main(args):
         save_weights_only=False,
         verbose=1
     )
-    
+    # model logs checkpoint
+    os.makedirs(logs_path+"unfreeze",exist_ok=True)
+    tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=logs_path+"unfreeze")
+    # callbacks for training model
+    callbacks_list = [model_cptk_loss,model_cptk_acc,tensorboard_callback]
+    model.trainable = True # Unfreeze all layers
+    # loss function
+    loss_fn = tf.keras.losses.CategoricalCrossentropy()
+    # optimizer
+    optimizer = tf.keras.optimizers.SGD(learning_rate=1e-6,momentum=0.9)
+    # metric 
+    for metric in metrics:
+        metric.reset_states()
+    # training model
     model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
+    logging.info("Transfer learning with low lerning rate for {} epochs".format(int(config.epochs*3/4)))
     model.fit(train_dataset, epochs=int(config.epochs*3/4), validation_data=val_dataset, callbacks=callbacks_list)
+    
     model.save(checkpoint_path +'/{}_all_epochs.h5'.format(config.backbone))
-
+    logging.info("Save last epoch model to {}".format(checkpoint_path +'/{}_all_epochs.h5'.format(config.backbone)))
+    
 if __name__ == '__main__':
     main(args)
 

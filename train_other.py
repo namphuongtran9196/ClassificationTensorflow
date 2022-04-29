@@ -96,9 +96,20 @@ def main(args):
     # compile model 
     model.compile(loss={"classes_probs_layer":loss_classes_fn,
                         "other_probs_layer":loss_other_fn}, optimizer=optimizer, metrics=metrics)   
+    # Transfer learning with high learning rate
+    logging.info("Fine-tuning high learning rate with other classes".format(int(config.epochs/2)))
+    model.fit(train_dataset, epochs=int(config.epochs/2), validation_data=val_dataset, callbacks=callbacks_list)
     # Transfer learning with high lerning rate
-    logging.info("Fine-tuning with other classes".format(int(config.epochs)))
-    model.fit(train_dataset, epochs=int(config.epochs), validation_data=val_dataset, callbacks=callbacks_list)
+    logging.info("Fine-tuning low learning rate with other classes".format(int(config.epochs/2)))
+    model.get_layer('prediction_logits_layer').trainable = True
+    optimizer = tf.keras.optimizers.SGD(learning_rate=1e-5, momentum=0.9)
+    # Reset metrics
+    for metric in metrics["classes_probs_layer"]:
+        metric.reset_states()
+    # Compile model
+    model.compile(loss={"classes_probs_layer":loss_classes_fn,
+                        "other_probs_layer":loss_other_fn}, optimizer=optimizer, metrics=metrics)   
+    model.fit(train_dataset, epochs=int(config.epochs/2), validation_data=val_dataset, callbacks=callbacks_list)
 
 if __name__ == '__main__':
     main(args)
