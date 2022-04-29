@@ -1,7 +1,6 @@
 import os
 import glob
 import tqdm
-import json
 import logging
 import skimage.io
 import numpy as np
@@ -24,12 +23,12 @@ def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None,class
                            shuffle=shuffle)
     return dataset
 
-def data_augmentation(prob=0.5):
+def data_augmentation(prob=0.3):
     def augment(image):
         random_prob = tf.random.uniform([], 0, 1)
         if random_prob > prob:
             """data augmentation"""
-            image = tf.keras.preprocessing.image.random_rotation(image,25,row_axis=1,col_axis=0,channel_axis=2,fill_mode='constant',cval=tf.reduce_mean(image))
+            image = tf.keras.preprocessing.image.random_rotation(image,90,row_axis=1,col_axis=0,channel_axis=2,fill_mode='constant',cval=tf.reduce_mean(image))
             image = tf.image.random_flip_left_right(image)
             # image = tf.image.random_flip_up_down(image)
             # image = tf.image.random_rot90(image, k=1)

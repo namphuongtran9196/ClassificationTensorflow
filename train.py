@@ -99,8 +99,10 @@ def main(args):
     # Transfer learning with high lerning rate
     logging.info("Transfer learning with high lerning rate for first {} epochs".format(int(config.epochs/4)))
     model.fit(train_dataset, epochs=int(config.epochs/4), validation_data=val_dataset, callbacks=callbacks_list)
+    
     # Transfer learning with low lerning rate
     logging.info("Unfreeze layers and train for the rest of the epochs")
+    model.trainable = True # Unfreeze all layers
     # loss function
     loss_fn = tf.keras.losses.CategoricalCrossentropy()
     # optimizer
@@ -111,7 +113,25 @@ def main(args):
     metrics.append(tf.keras.metrics.Precision())
     metrics.append(tf.keras.metrics.Recall())
     metrics.append(tf.keras.metrics.AUC())
-    model.trainable = True # Unfreeze all layers
+    
+    # model save checkpoint
+    model_cptk_loss = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path +'/{}_unfreeze_loss.h5'.format(config.backbone),
+        monitor="val_loss",
+        mode='min',
+        save_best_only=True,
+        save_weights_only=False,
+        verbose=1
+    )
+    model_cptk_acc = tf.keras.callbacks.ModelCheckpoint(
+        filepath=checkpoint_path +'/{}_unfreeze_acc.h5'.format(config.backbone),
+        monitor="val_categorical_accuracy",
+        mode='max',
+        save_best_only=True,
+        save_weights_only=False,
+        verbose=1
+    )
+    
     model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
     model.fit(train_dataset, epochs=int(config.epochs*3/4), validation_data=val_dataset, callbacks=callbacks_list)
     model.save(checkpoint_path +'/{}_all_epochs.h5'.format(config.backbone))
