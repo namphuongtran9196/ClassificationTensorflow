@@ -51,7 +51,7 @@ def main(args):
                                classes=train_dataset.classes,classes_map_to_id=train_dataset.classes_map_to_id
                                ,one_hot=True, shuffle=True)
     # define checkpoint save time and path
-    checkpoint_dir = "./checkpoints/{}".format(pretrained_model.name)
+    checkpoint_dir = os.path.join(config.checkpoints_dir,pretrained_model.name)
     save_time = datetime.now().strftime("%Y%m%d-%H%M%S")
     # create checkpoint dir and logs path
     checkpoint_path = os.path.join(checkpoint_dir, save_time,'weights')
@@ -83,9 +83,10 @@ def main(args):
     loss_classes_fn = tf.keras.losses.BinaryCrossentropy(from_logits=False)
     loss_other_fn = other_loss()
     # optimizer
-    optimizer = tf.keras.optimizers.Adam(learning_rate=config.learning_rate)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=config.learning_rate, momentum=0.9)
     # metric 
-    metrics = {"classes_probs_layer":[tf.keras.metrics.CategoricalAccuracy(),
+    metrics = {"classes_probs_layer":[  tf.keras.metrics.BinaryAccuracy(),
+                                        tf.keras.metrics.CategoricalAccuracy(),
                                         tf.keras.metrics.Precision(),
                                         tf.keras.metrics.Recall(),
                                         tf.keras.metrics.AUC()]

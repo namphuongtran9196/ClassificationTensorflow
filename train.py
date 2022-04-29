@@ -43,7 +43,7 @@ def main(args):
                                classes=train_dataset.classes,classes_map_to_id=train_dataset.classes_map_to_id
                                ,one_hot=True, shuffle=True)
     # define checkpoint save time and path
-    checkpoint_dir = "./checkpoints/{}".format(config.backbone)
+    checkpoint_dir = os.path.join(config.checkpoints_dir,config.backbone)
     save_time = datetime.now().strftime("%Y%m%d-%H%M%S")
     # create checkpoint dir and logs path
     checkpoint_path = os.path.join(checkpoint_dir, save_time,'weights')
@@ -77,7 +77,7 @@ def main(args):
     # loss function
     loss_fn = tf.keras.losses.CategoricalCrossentropy()
     # optimizer
-    optimizer = tf.keras.optimizers.Adam(learning_rate=config.learning_rate)
+    optimizer = tf.keras.optimizers.SGD(learning_rate=config.learning_rate,momentum=0.9)
     # metric 
     metrics = []
     metrics.append(tf.keras.metrics.CategoricalAccuracy())
@@ -101,6 +101,16 @@ def main(args):
     model.fit(train_dataset, epochs=int(config.epochs/4), validation_data=val_dataset, callbacks=callbacks_list)
     # Transfer learning with low lerning rate
     logging.info("Unfreeze layers and train for the rest of the epochs")
+    # loss function
+    loss_fn = tf.keras.losses.CategoricalCrossentropy()
+    # optimizer
+    optimizer = tf.keras.optimizers.SGD(learning_rate=1e-6,momentum=0.9)
+    # metric 
+    metrics = []
+    metrics.append(tf.keras.metrics.CategoricalAccuracy())
+    metrics.append(tf.keras.metrics.Precision())
+    metrics.append(tf.keras.metrics.Recall())
+    metrics.append(tf.keras.metrics.AUC())
     model.trainable = True # Unfreeze all layers
     model.compile(loss=loss_fn, optimizer=optimizer, metrics=metrics)   
     model.fit(train_dataset, epochs=int(config.epochs*3/4), validation_data=val_dataset, callbacks=callbacks_list)
