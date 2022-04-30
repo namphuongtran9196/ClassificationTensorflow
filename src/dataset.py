@@ -23,19 +23,18 @@ def load_dataset(dataset_dir,batch_size,target_size=(224,224),classes=None,class
                            shuffle=shuffle)
     return dataset
 
-def data_augmentation(prob=0.3):
+def data_augmentation(prob=0.7):
     def augment(image):
         random_prob = tf.random.uniform([], 0, 1)
-        if random_prob > prob:
+        if random_prob <= prob:
             """data augmentation"""
-            image = tf.keras.preprocessing.image.random_rotation(image,90,row_axis=1,col_axis=0,channel_axis=2,fill_mode='constant',cval=tf.reduce_mean(image))
+            image = tf.keras.preprocessing.image.random_rotation(image,180,row_axis=1,col_axis=0,channel_axis=2,fill_mode='constant',cval=tf.reduce_mean(image))
             image = tf.image.random_flip_left_right(image)
-            # image = tf.image.random_flip_up_down(image)
-            # image = tf.image.random_rot90(image, k=1)
-            image = tf.image.random_brightness(image, max_delta=32. / 255.)
+            image = tf.image.random_flip_up_down(image)
+            image = tf.image.random_brightness(image, 0.3)
             image = tf.image.random_saturation(image, lower=0.5, upper=1.5)
             image = tf.image.random_hue(image, max_delta=0.2)
-            image = tf.image.random_contrast(image, lower=0.5, upper=1.5)
+            image = tf.image.random_contrast(image, lower=0.7, upper=1.0)
         return image
     return augment
 
