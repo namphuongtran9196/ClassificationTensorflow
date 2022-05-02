@@ -60,7 +60,7 @@ def main(args):
     os.makedirs(logs_path,exist_ok=True)
     # model save checkpoint
     model_cptk_loss = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path +'/{}_loss.h5'.format(config.backbone),
+        filepath=checkpoint_path +'/{}_loss.h5'.format(model.name),
         monitor="val_loss",
         mode='min',
         save_best_only=True,
@@ -68,7 +68,7 @@ def main(args):
         verbose=1
     )
     model_cptk_acc = tf.keras.callbacks.ModelCheckpoint(
-        filepath=checkpoint_path +'/{}_acc.h5'.format(config.backbone),
+        filepath=checkpoint_path +'/{}_acc.h5'.format(model.name),
         monitor="val_categorical_accuracy",
         mode='max',
         save_best_only=True,
